@@ -1,0 +1,2 @@
+# afad deprem scraper
+ 
