@@ -1,2 +1,2 @@
-# afad deprem scraper
+# afad earthquake scraper
  
