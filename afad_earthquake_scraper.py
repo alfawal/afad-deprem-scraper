@@ -39,12 +39,31 @@ class AfadEarthquakeScraper:
 
     @property
     def results(self) -> list[EarthquakeRecord] | list:
+        """
+        Get the earthquake records.
+
+        Raises:
+            ValueError: if the scrape_table() method was not called.
+
+        Returns:
+            list[EarthquakeRecord] | list: the earthquake records as a list of
+                dicts or an empty list if no data was found.
+        """
         if self._data is None:
             raise ValueError("No data found. Run scrape_table() first.")
         return self._data
 
     @property
     def length(self) -> int:
+        """
+        Get the number of earthquake records.
+
+        Raises:
+            ValueError: if the scrape_table() method was not called.
+
+        Returns:
+            int: the number of the scraped earthquake records as an integer.
+        """
         return len(self.results)
 
     def _get_html_table(self) -> bytes:
