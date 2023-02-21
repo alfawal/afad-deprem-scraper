@@ -9,7 +9,6 @@ import csv
 
 __all__ = (
     "AfadEarthquakeScraper",
-    "AfadDepremScraper",
     "EarthquakeRecord",
 )
 
@@ -32,12 +31,18 @@ class AfadEarthquakeScraper:
     Scrapes the last 100 earthquakes from AFAD's website.
     """
 
-    def __init__(self, url=None):
-        self.url = url or "https://deprem.afad.gov.tr/last-earthquakes.html"
-        self.session = requests.Session()
+    def __init__(self, url: str = None):
+        self.url: str = url or "https://deprem.afad.gov.tr/last-earthquakes.html"
+        self.session: requests.Session = requests.Session()
+        self.length: int = 0
 
     def _get_html_table(self) -> bytes:
-        response = self.session.get(self.url)
+        response: requests.Response = self.session.get(self.url)
+        if not response.ok:
+            raise requests.HTTPError(
+                f"Non-success status code returned: {response.status_code}"
+                "\nCheck the URL or file a bug."
+            )
         return response.content
 
     def _get_soup(self, html: str | bytes) -> BeautifulSoup:
@@ -57,13 +62,15 @@ class AfadEarthquakeScraper:
         soup = self._get_soup(self._get_html_table())
         table = soup.find("table", {"class": "content-table"})
         if not table:
-            raise ValueError("Table was not found. Check the URL or file a bug.")
+            raise ValueError("Data table was not found. Check the URL or file a bug.")
 
         results = []
         for tr in table.tbody.find_all("tr"):
             tds = tr.find_all("td")
             date_time = parser.parse(tds[0].text)
             results.append(
+                # TODO: Refactor the mappings, reading the values dynamically
+                #  from the table headers in some way.
                 {
                     "id": tds[-1].text,
                     "datetime": date_time.isoformat(),
@@ -77,6 +84,7 @@ class AfadEarthquakeScraper:
                     "region": tds[6].text,
                 }
             )
+        self.length = len(results)
         return sorted(
             results,
             key=lambda r: r["datetime"],
@@ -106,9 +114,6 @@ class AfadEarthquakeScraper:
             writer = csv.DictWriter(f, fieldnames=sample_keys)
             writer.writeheader()
             writer.writerows(table_data)
-
-
-AfadDepremScraper = AfadEarthquakeScraper
 
 
 def main() -> None:
